@@ -1,9 +1,11 @@
-use std::time::Duration;
 use serde::{Deserialize, Serialize};
+
+use crate::WorkDuration;
 
 #[derive(Deserialize, Serialize)]
 pub struct TrackingRecord {
     pub id: String,
+    #[serde(skip_serializing_if = "String::is_empty")]
     pub description: String,
-    pub time: Duration
+    pub duration: WorkDuration
 }

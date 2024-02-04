@@ -1,12 +1,14 @@
-use std::str::FromStr;
+use serde::{Serialize, Deserialize};
 
 use std::fmt;
 use std::fmt::{Display, Formatter};
 
+use std::str::FromStr;
+
 pub struct WorkDuration {
-    pub days: u64,
-    pub hours: u8,
-    pub minutes: u8
+    pub days: u16,
+    pub hours: u16,
+    pub minutes: u16
 }
 
 const SEMI_COLON: char = ':';
@@ -20,7 +22,6 @@ impl WorkDuration {
         }
     }
 
-
     fn append_with_sep_if_not_empty(str: &mut String, to_append: u64) -> &String {
         if to_append == 0 {
             return str;
@@ -30,24 +31,15 @@ impl WorkDuration {
 
        return str;
     }
-
-    fn append_if_not_empty(str: &mut String, to_append: u64) -> &String {
-        if to_append == 0 {
-            return str;
-        }
-
-       str.push_str(&format!("{}", to_append));
-
-       return str;
-    }
 }
+
 impl Display for WorkDuration {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         let mut str = String::new();
 
-        Self::append_with_sep_if_not_empty(&mut str, self.days);
-        Self::append_with_sep_if_not_empty(&mut str, self.hours.into());
-        Self::append_if_not_empty(&mut str, self.minutes.into());
+        Self::append_with_sep_if_not_empty(&mut str, self.days.into());
+        str.push_str(&format!("{}:", self.hours));
+        str.push_str(&format!("{:02}", self.minutes));
 
         return write!(f, "{}", str);
     }
@@ -88,5 +80,23 @@ impl FromStr for WorkDuration {
         }
 
         return Ok(work_duration);
+    }
+}
+
+impl Serialize for WorkDuration {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer {
+            serializer.serialize_str(&self.to_string())
+    }
+}
+
+impl<'de> Deserialize<'de> for WorkDuration {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de> {
+            let serialized_data = String::deserialize(deserializer)?;
+            let work_duration = WorkDuration::from_str(&serialized_data).map_err(serde::de::Error::custom)?;
+            Ok(work_duration)
     }
 }

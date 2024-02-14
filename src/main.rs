@@ -17,6 +17,13 @@ struct Cli {
     #[arg(short, long)]
     output_path: Option<PathBuf>,
 
+    /// The filter to use for the query
+    #[arg(short, long)]
+    filter_id: Option<String>,
+
+    #[arg(short, long)]
+    remove_empty: Option<bool>,
+
     /// The path of the input file.
     input_path: PathBuf,
 }
@@ -24,7 +31,30 @@ struct Cli {
 fn main() {
     let args = Cli::parse();
 
-    let tracking_days = load_tracking_days(args.input_path.to_str().unwrap());
+    let mut tracking_days = load_tracking_days(args.input_path.to_str().unwrap());
+
+    if let Some(filter_id) = args.filter_id {
+        filter_id_starts_with(&mut tracking_days, &filter_id);
+    }
+
+    if args.remove_empty.is_some() {
+        filter_remove_empty(&mut tracking_days);
+    }
+
+    println!("{}", serde_yaml::to_string(&tracking_days).unwrap());
+}
+
+fn filter_id_starts_with(tracking_days: &mut Vec<TrackingDay>, filter_str: &str) {
+    tracking_days
+        .iter_mut()
+        .for_each(|tracking_day| {
+            tracking_day.tracking
+                .retain(|record| record.id.starts_with(&filter_str))
+        });
+}
+
+fn filter_remove_empty(tracking_days: &mut Vec<TrackingDay>) {
+    tracking_days.retain(|tracking_day| !tracking_day.tracking.is_empty());
 }
 
 fn load_tracking_days(filepath: &str) -> Vec<TrackingDay> {

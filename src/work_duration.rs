@@ -2,7 +2,7 @@ use serde::{Serialize, Deserialize};
 
 use std::fmt;
 use std::fmt::{Display, Formatter};
-
+use std::ops;
 use std::str::FromStr;
 
 pub struct WorkDuration {
@@ -12,6 +12,27 @@ pub struct WorkDuration {
 }
 
 const SEMI_COLON: char = ':';
+
+impl ops::Add<WorkDuration> for WorkDuration {
+    type Output = WorkDuration;
+
+    fn add(self, _rhs: WorkDuration) -> WorkDuration {
+        let mut days = self.days + _rhs.days;
+        let mut hours = self.hours + _rhs.hours;
+        let mut minutes = self.minutes + _rhs.minutes;
+
+        hours += minutes / 60;
+        minutes %= 60;
+        days += hours / 24;
+        hours %= 24;
+
+        WorkDuration {
+            days,
+            hours,
+            minutes
+        }
+    }
+}
 
 impl WorkDuration {
     fn new() -> WorkDuration {

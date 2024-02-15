@@ -7,6 +7,7 @@ use tracking_record::TrackingRecord;
 use work_duration::WorkDuration;
 
 use clap::Parser;
+use std::collections::HashMap;
 use std::path::PathBuf;
 use std::fs::File;
 use std::io::Read;
@@ -55,6 +56,23 @@ fn filter_id_starts_with(tracking_days: &mut Vec<TrackingDay>, filter_str: &str)
 
 fn filter_remove_empty(tracking_days: &mut Vec<TrackingDay>) {
     tracking_days.retain(|tracking_day| !tracking_day.tracking.is_empty());
+}
+
+fn total_by_id(tracking_days: &Vec<TrackingDay>) -> Vec<TrackingRecord> {
+    let mut tracking = HashMap::new();
+
+    for tracking_day in tracking_days {
+        for record in &tracking_day.tracking {
+            tracking.entry(record.id.to_owned())
+                .and_modify(|t: &mut TrackingRecord| t.duration += record.duration)
+                .or_insert(record.clone());
+        }
+    }
+
+    tracking
+        .values()
+        .cloned()
+        .collect()
 }
 
 fn load_tracking_days(filepath: &str) -> Vec<TrackingDay> {

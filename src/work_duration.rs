@@ -5,6 +5,7 @@ use std::fmt::{Display, Formatter};
 use std::ops;
 use std::str::FromStr;
 
+#[derive(Copy, Clone)]
 pub struct WorkDuration {
     pub days: u16,
     pub hours: u16,

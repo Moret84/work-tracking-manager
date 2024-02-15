@@ -32,7 +32,7 @@ impl WorkDuration {
             return str;
         }
 
-       str.push_str(&format!("{}:", to_append));
+       str.push_str(&format!("{:02}:", to_append));
 
        return str;
     }
@@ -42,23 +42,16 @@ impl Display for WorkDuration {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         let mut str = String::new();
 
-        let mut spare_minutes = self.minutes;
-
         let days = self.minutes / MINUTES_IN_DAY;
-        if days > 0 {
-            spare_minutes -= days * MINUTES_IN_DAY;
-        }
-
-        let hours = self.minutes / MINUTES_IN_HOUR;
-        if hours > 0 {
-            spare_minutes -= hours * MINUTES_IN_HOUR;
-        }
+        let mut spare_minutes = self.minutes % MINUTES_IN_DAY;
+        let hours = spare_minutes / MINUTES_IN_HOUR;
+        spare_minutes = spare_minutes % 60;
 
         Self::append_with_sep_if_not_empty(&mut str, days.into());
-        str.push_str(&format!("{}:", hours));
+        str.push_str(&format!("{:02}:", hours));
         str.push_str(&format!("{:02}", spare_minutes));
 
-        return write!(f, "{}", str);
+        return write!(f, "{} total: {:.2}", str, self.minutes as f64 / MINUTES_IN_DAY as f64);
     }
 }
 

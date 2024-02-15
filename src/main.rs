@@ -25,6 +25,9 @@ struct Cli {
     #[arg(short, long, action)]
     remove_empty: bool,
 
+    #[arg(short, long, action)]
+    total: bool,
+
     /// The path of the input file.
     input_path: PathBuf,
 }
@@ -40,6 +43,13 @@ fn main() {
 
     if args.remove_empty {
         filter_remove_empty(&mut tracking_days);
+    }
+
+    if args.total {
+        let tracking = total_by_id(&tracking_days);
+
+        println!("{}", serde_yaml::to_string(&tracking).unwrap());
+        return;
     }
 
     println!("{}", serde_yaml::to_string(&tracking_days).unwrap());

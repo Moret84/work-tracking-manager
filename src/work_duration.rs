@@ -7,31 +7,22 @@ use std::str::FromStr;
 
 #[derive(Copy, Clone)]
 pub struct WorkDuration {
-    pub days: u16,
-    pub hours: u16,
-    pub minutes: u16
+    pub minutes: u32
 }
 
 const SEMI_COLON: char = ':';
+const MINUTES_IN_HOUR: u32 = 60;
+const MINUTES_IN_DAY: u32 = 450;
 
 impl ops::AddAssign<WorkDuration> for WorkDuration {
     fn add_assign(&mut self, rhs: WorkDuration) {
-        self.days += rhs.days;
-        self.hours += rhs.hours;
         self.minutes += rhs.minutes;
-
-        self.hours += self.minutes / 60;
-        self.minutes %= 60;
-        self.days += self.hours / 24;
-        self.hours %= 24;
     }
 }
 
 impl WorkDuration {
     fn new() -> WorkDuration {
         WorkDuration {
-            days: 0,
-            hours: 0,
             minutes: 0
         }
     }
@@ -51,9 +42,21 @@ impl Display for WorkDuration {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         let mut str = String::new();
 
-        Self::append_with_sep_if_not_empty(&mut str, self.days.into());
-        str.push_str(&format!("{}:", self.hours));
-        str.push_str(&format!("{:02}", self.minutes));
+        let mut spare_minutes = self.minutes;
+
+        let days = self.minutes / MINUTES_IN_DAY;
+        if days > 0 {
+            spare_minutes -= days * MINUTES_IN_DAY;
+        }
+
+        let hours = self.minutes / MINUTES_IN_HOUR;
+        if hours > 0 {
+            spare_minutes -= hours * MINUTES_IN_HOUR;
+        }
+
+        Self::append_with_sep_if_not_empty(&mut str, days.into());
+        str.push_str(&format!("{}:", hours));
+        str.push_str(&format!("{:02}", spare_minutes));
 
         return write!(f, "{}", str);
     }
@@ -74,10 +77,11 @@ impl FromStr for WorkDuration {
 
             match element {
                 0 => work_duration.minutes = part_string.parse().unwrap(),
-                1 => work_duration.hours = part_string.parse().unwrap(),
-                2 => work_duration.days = part_string.parse().unwrap(),
+                1 => work_duration.minutes += part_string.parse::<u32>().unwrap() * MINUTES_IN_HOUR,
+                2 => work_duration.minutes += part_string.parse::<u32>().unwrap() * MINUTES_IN_DAY,
                 _ => return Err("error parsing work duration".to_string())
             }
+
             element += 1;
             part_string.clear();
         }
@@ -88,8 +92,8 @@ impl FromStr for WorkDuration {
 
         match element {
             0 => work_duration.minutes = part_string.parse().unwrap(),
-            1 => work_duration.hours = part_string.parse().unwrap(),
-            2 => work_duration.days = part_string.parse().unwrap(),
+            1 => work_duration.minutes += part_string.parse::<u32>().unwrap() * MINUTES_IN_HOUR,
+            2 => work_duration.minutes += part_string.parse::<u32>().unwrap() * MINUTES_IN_DAY,
             _ => return Err("error parsing work duration".to_string())
         }
 

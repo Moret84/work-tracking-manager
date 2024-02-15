@@ -13,24 +13,16 @@ pub struct WorkDuration {
 
 const SEMI_COLON: char = ':';
 
-impl ops::Add<WorkDuration> for WorkDuration {
-    type Output = WorkDuration;
+impl ops::AddAssign<WorkDuration> for WorkDuration {
+    fn add_assign(&mut self, rhs: WorkDuration) {
+        self.days += rhs.days;
+        self.hours += rhs.hours;
+        self.minutes += rhs.minutes;
 
-    fn add(self, _rhs: WorkDuration) -> WorkDuration {
-        let mut days = self.days + _rhs.days;
-        let mut hours = self.hours + _rhs.hours;
-        let mut minutes = self.minutes + _rhs.minutes;
-
-        hours += minutes / 60;
-        minutes %= 60;
-        days += hours / 24;
-        hours %= 24;
-
-        WorkDuration {
-            days,
-            hours,
-            minutes
-        }
+        self.hours += self.minutes / 60;
+        self.minutes %= 60;
+        self.days += self.hours / 24;
+        self.hours %= 24;
     }
 }
 

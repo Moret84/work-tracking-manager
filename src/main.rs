@@ -22,8 +22,8 @@ struct Cli {
     #[arg(short, long)]
     filter_id: Option<String>,
 
-    #[arg(short, long)]
-    remove_empty: Option<bool>,
+    #[arg(short, long, action)]
+    remove_empty: bool,
 
     /// The path of the input file.
     input_path: PathBuf,
@@ -38,7 +38,7 @@ fn main() {
         filter_id_starts_with(&mut tracking_days, &filter_id);
     }
 
-    if args.remove_empty.is_some() {
+    if args.remove_empty {
         filter_remove_empty(&mut tracking_days);
     }
 

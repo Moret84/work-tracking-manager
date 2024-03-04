@@ -22,13 +22,15 @@ struct Cli {
     #[arg(short, long)]
     output_path: Option<PathBuf>,
 
-    /// The filter to use for the query
+    /// The filter to use for the query.
     #[arg(short, long)]
     filter_id: Option<String>,
 
+    /// Whether to remove days whose tracking is empty or not.
     #[arg(short, long, action)]
     remove_empty: bool,
 
+    /// Whether to compute the total per item or not.
     #[arg(short, long, action)]
     total: bool,
 

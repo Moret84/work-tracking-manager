@@ -10,7 +10,8 @@ pub struct TrackingDay {
     pub tracking: Vec<TrackingRecord>
 }
 
-// Warning: the dash separator, which means ignore trailing 0, is not portable and is glibc dependant. Reead glibcn notes at the bottom of man 3 sfrtime page.
+// Warning: the dash separator, which means ignore trailing 0, is not portable and is glibc dependent as said in glibc notes at the bottom of man 3 sfrtime page.
+// We then implement a custom month parser for deserialization.
 const DATE_FORMAT : &str = "%A %-d %B %Y";
 const DATE_LOCALE : Locale = Locale::fr_FR;
 
@@ -32,6 +33,18 @@ where
         let day : u32 = parts[1].parse().unwrap();
 
         Ok(NaiveDate::from_ymd_opt(year, month, day).unwrap())
+}
+
+impl TrackingDay {
+    pub fn add_tracking_record(&mut self, record_to_add: TrackingRecord) {
+        let existing_record = self.tracking.iter_mut()
+            .find(|record| record.id == record_to_add.id);
+
+        match existing_record {
+            Some(value) => value.duration += record_to_add.duration,
+            None => self.tracking.push(record_to_add)
+        }
+    }
 }
 
 fn month_to_u8(input: &str) -> u8 {

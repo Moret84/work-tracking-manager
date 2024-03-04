@@ -104,11 +104,24 @@ fn load_tracking_days(filepath: &str) -> Vec<TrackingDay> {
         Err(error) => panic!("Erreur lors de l'ouverture du fichier : {:?}", error),
     };
 
-    let mut contents = String::new();
+    let mut content = String::new();
 
-    match file.read_to_string(&mut contents) {
+    match file.read_to_string(&mut content) {
         Ok(_) => {
-            serde_yaml::from_str(&contents).unwrap()
+            match Path::new(filepath).extension().unwrap().to_str() {
+                Some("yml") => {
+                    parse_yaml(&content)
+                },
+                Some("yaml") => {
+                    parse_yaml(&content)
+                },
+                Some("csv") => {
+                    parse_csv(&content)
+                },
+                _ => {
+                    panic!("Incompatible file")
+                }
+            }
         }
         Err(error) => panic!("Erreur lors de la lecture du fichier : {:?}", error),
     }
@@ -143,3 +156,38 @@ fn save(tracking_days: &Vec<TrackingDay>) {
     }
 }
 
+fn parse_csv(content: &str) -> Vec<TrackingDay> {
+    let mut tracking_days : BTreeMap<NaiveDate, TrackingDay> = BTreeMap::new();
+
+    for line in content.lines() {
+        let parts : Vec<&str> = line.trim().split(';').collect();
+
+        let minutes = (parts[0].replace(",",".").parse::<f64>().unwrap() * 60.0).round() as u32;
+        let id = parts[1].to_string();
+        let description = format!("{} {}", parts[3], parts[2]);
+        let date = NaiveDate::parse_from_str(parts[4], "%m/%d/%Y").unwrap();
+
+        if ! tracking_days.contains_key(&date) {
+            tracking_days.insert(date, TrackingDay {
+                date,
+                tracking: Vec::new()
+            });
+        }
+
+        tracking_days.get_mut(&date).unwrap().add_tracking_record(TrackingRecord {
+            id,
+            description,
+            duration: WorkDuration {
+                minutes
+            }
+        });
+    }
+
+    tracking_days
+        .into_values()
+        .collect()
+}
+
+fn parse_yaml(content: &str) -> Vec<TrackingDay> {
+    serde_yaml::from_str(&content).unwrap()
+}

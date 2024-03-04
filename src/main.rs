@@ -5,12 +5,16 @@ mod tracking_day;
 use tracking_day::TrackingDay;
 use tracking_record::TrackingRecord;
 use work_duration::WorkDuration;
+use std::collections::BTreeMap;
+
+use chrono::{Datelike,NaiveDate};
+use std::fs;
 
 use clap::Parser;
 use std::collections::HashMap;
-use std::path::PathBuf;
-use std::fs::File;
-use std::io::Read;
+use std::path::{Path,PathBuf};
+use std::fs::{File, OpenOptions};
+use std::io::{Read, Write};
 
 #[derive(Parser)]
 struct Cli {
@@ -27,6 +31,10 @@ struct Cli {
 
     #[arg(short, long, action)]
     total: bool,
+
+    /// Whether to write back the result or not.
+    #[arg(short, long, action)]
+    write: bool,
 
     /// The path of the input file.
     input_path: PathBuf,
@@ -45,9 +53,12 @@ fn main() {
         filter_remove_empty(&mut tracking_days);
     }
 
+    if args.write {
+        save(&tracking_days);
+    }
+
     if args.total {
         let tracking = total_by_id(&tracking_days);
-
         println!("{}", serde_yaml::to_string(&tracking).unwrap());
         return;
     }
@@ -100,3 +111,33 @@ fn load_tracking_days(filepath: &str) -> Vec<TrackingDay> {
         Err(error) => panic!("Erreur lors de la lecture du fichier : {:?}", error),
     }
 }
+
+fn save(tracking_days: &Vec<TrackingDay>) {
+    for tracking_day in tracking_days {
+        let year = tracking_day.date.year().to_string();
+
+        if !std::path::Path::new(&year).exists() {
+            fs::create_dir(&year).unwrap();
+        }
+
+        let month = tracking_day.date.month0().to_string();
+
+        let mut filepath = PathBuf::new();
+        filepath.push(&year);
+        filepath.push(&month);
+        filepath.push(".yml");
+
+        let mut file = OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(filepath)
+            .unwrap();
+
+        file.write_all(
+            serde_yaml::to_string(&tracking_day)
+                .unwrap()
+                .as_bytes())
+            .unwrap()
+    }
+}
+

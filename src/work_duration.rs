@@ -4,6 +4,7 @@ use std::fmt;
 use std::fmt::{Display, Formatter};
 use std::ops;
 use std::str::FromStr;
+use std::sync::atomic::{AtomicBool, Ordering};
 
 #[derive(Copy, Clone)]
 pub struct WorkDuration {
@@ -13,6 +14,12 @@ pub struct WorkDuration {
 const SEMI_COLON: char = ':';
 const MINUTES_IN_HOUR: u32 = 60;
 const MINUTES_IN_DAY: u32 = 450;
+
+static INCLUDE_TOTAL: AtomicBool = AtomicBool::new(false);
+
+pub fn set_include_total(value: bool) {
+    INCLUDE_TOTAL.store(value, Ordering::Relaxed);
+}
 
 impl ops::AddAssign<WorkDuration> for WorkDuration {
     fn add_assign(&mut self, rhs: WorkDuration) {
@@ -51,7 +58,14 @@ impl Display for WorkDuration {
         str.push_str(&format!("{:02}:", hours));
         str.push_str(&format!("{:02}", spare_minutes));
 
-        return write!(f, "{} total: {:.2}", str, self.minutes as f64 / MINUTES_IN_DAY as f64);
+        let mut result = format!("{}", str);
+
+        if INCLUDE_TOTAL.load(Ordering::Relaxed) {
+            result.push_str(
+                &format!(" total: {:.2}", self.minutes as f64 / MINUTES_IN_DAY as f64)
+            )}
+
+        return write!(f, "{}", result);
     }
 }
 

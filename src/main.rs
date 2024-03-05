@@ -27,15 +27,15 @@ struct Cli {
     filter_id: Option<String>,
 
     /// Whether to remove days whose tracking is empty or not.
-    #[arg(short, long, action)]
+    #[arg(short, long)]
     remove_empty: bool,
 
     /// Whether to compute the total per item or not.
-    #[arg(short, long, action)]
+    #[arg(short, long)]
     total: bool,
 
     /// Whether to write back the result or not.
-    #[arg(short, long, action)]
+    #[arg(short, long)]
     write: bool,
 
     /// The path of the input file.

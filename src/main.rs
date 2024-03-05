@@ -146,7 +146,7 @@ fn save(tracking_days: &Vec<TrackingDay>) {
         let mut filepath = PathBuf::new();
         filepath.push(&year);
         filepath.push(&month);
-        filepath.push(".yml");
+        filepath.set_extension("yml");
 
         let mut file = OpenOptions::new()
             .create(true)

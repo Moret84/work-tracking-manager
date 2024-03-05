@@ -141,7 +141,7 @@ fn save(tracking_days: &Vec<TrackingDay>) {
             fs::create_dir(&year).unwrap();
         }
 
-        let month = tracking_day.date.month0().to_string();
+        let month = format!("{:02}", tracking_day.date.month());
 
         let mut filepath = PathBuf::new();
         filepath.push(&year);

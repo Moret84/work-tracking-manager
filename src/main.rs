@@ -68,6 +68,10 @@ fn main() {
     }
 
     println!("{}", serde_yaml::to_string(&tracking_days).unwrap());
+
+    if args.write {
+        save(&tracking_days);
+    }
 }
 
 fn filter_id_starts_with(tracking_days: &mut Vec<TrackingDay>, filter_str: &str) {

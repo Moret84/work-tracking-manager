@@ -38,6 +38,10 @@ struct Cli {
     #[arg(short, long)]
     write: bool,
 
+    /// Whether we should show total next to result.
+    #[arg(long)]
+    show_total: bool,
+
     /// The path of the input file.
     input_path: PathBuf,
 }
@@ -55,9 +59,7 @@ fn main() {
         filter_remove_empty(&mut tracking_days);
     }
 
-    if args.write {
-        save(&tracking_days);
-    }
+    work_duration::set_include_total(args.show_total);
 
     if args.total {
         let tracking = total_by_id(&tracking_days);

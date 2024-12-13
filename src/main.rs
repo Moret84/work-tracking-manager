@@ -15,6 +15,7 @@ use std::collections::HashMap;
 use std::path::{Path,PathBuf};
 use std::fs::{File, OpenOptions};
 use std::io::{Read, Write};
+use regex::Regex;
 
 #[derive(Parser)]
 struct Cli {
@@ -52,7 +53,7 @@ fn main() {
     let mut tracking_days = load_tracking_days(args.input_path.to_str().unwrap());
 
     if let Some(filter_id) = args.filter_id {
-        filter_id_starts_with(&mut tracking_days, &filter_id);
+        filter_id_str(&mut tracking_days, &filter_id);
     }
 
     if args.remove_empty {
@@ -74,13 +75,20 @@ fn main() {
     }
 }
 
-fn filter_id_starts_with(tracking_days: &mut Vec<TrackingDay>, filter_str: &str) {
+fn filter_id_str(tracking_days: &mut Vec<TrackingDay>, filter_str: &str) {
+    let mut regex_str = String::from("^");
+    regex_str = filter_str.replace("*", ".*");
+    regex_str += "$";
+
+    let regex = Regex::new(&regex_str).unwrap();
+
     tracking_days
         .iter_mut()
         .for_each(|tracking_day| {
             tracking_day.tracking
-                .retain(|record| record.id.starts_with(&filter_str))
+                .retain(|record| regex.is_match(&record.id))
         });
+    filter_remove_empty(tracking_days);
 }
 
 fn filter_remove_empty(tracking_days: &mut Vec<TrackingDay>) {

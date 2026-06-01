@@ -76,9 +76,7 @@ fn main() {
 }
 
 fn filter_id_str(tracking_days: &mut Vec<TrackingDay>, filter_str: &str) {
-    let mut regex_str = String::from("^");
-    regex_str = filter_str.replace("*", ".*");
-    regex_str += "$";
+    let regex_str = format!("^{}$", filter_str.replace("*", ".*"));
 
     let regex = Regex::new(&regex_str).unwrap();
 

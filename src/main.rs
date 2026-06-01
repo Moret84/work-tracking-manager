@@ -68,7 +68,7 @@ fn main() {
         return;
     }
 
-    println!("{}", serde_yaml::to_string(&tracking_days).unwrap());
+    println!("{}", format_tracking_days_output(&tracking_days));
 
     if args.write {
         save(&tracking_days);
@@ -91,6 +91,12 @@ fn filter_id_str(tracking_days: &mut Vec<TrackingDay>, filter_str: &str) {
 
 fn filter_remove_empty(tracking_days: &mut Vec<TrackingDay>) {
     tracking_days.retain(|tracking_day| !tracking_day.tracking.is_empty());
+}
+
+fn format_tracking_days_output(tracking_days: &Vec<TrackingDay>) -> String {
+    serde_yaml::to_string(tracking_days)
+        .unwrap()
+        .replace("\n- date:", "\n\n- date:")
 }
 
 fn total_by_id(tracking_days: &Vec<TrackingDay>) -> Vec<TrackingRecord> {

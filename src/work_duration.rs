@@ -69,6 +69,20 @@ impl Display for WorkDuration {
     }
 }
 
+fn add_duration_part(duration: &mut WorkDuration, part: &str, element: i32, original: &str) -> Result<(), String> {
+    let value: u32 = part.parse()
+        .map_err(|_| format!("durée invalide « {original} » : « {part} » n'est pas un nombre"))?;
+
+    match element {
+        0 => duration.minutes += value,
+        1 => duration.minutes += value * MINUTES_IN_HOUR,
+        2 => duration.minutes += value * MINUTES_IN_DAY,
+        _ => return Err(format!("durée invalide « {original} » : trop de segments (max heures:minutes:secondes)")),
+    }
+
+    Ok(())
+}
+
 impl FromStr for WorkDuration {
     type Err = String;
     fn from_str(value: &str) -> Result<Self, Self::Err> {
@@ -82,12 +96,7 @@ impl FromStr for WorkDuration {
                 continue;
             }
 
-            match element {
-                0 => work_duration.minutes = part_string.parse().unwrap(),
-                1 => work_duration.minutes += part_string.parse::<u32>().unwrap() * MINUTES_IN_HOUR,
-                2 => work_duration.minutes += part_string.parse::<u32>().unwrap() * MINUTES_IN_DAY,
-                _ => return Err("error parsing work duration".to_string())
-            }
+            add_duration_part(&mut work_duration, &part_string, element, value)?;
 
             element += 1;
             part_string.clear();
@@ -97,12 +106,7 @@ impl FromStr for WorkDuration {
             return Ok(work_duration);
         }
 
-        match element {
-            0 => work_duration.minutes = part_string.parse().unwrap(),
-            1 => work_duration.minutes += part_string.parse::<u32>().unwrap() * MINUTES_IN_HOUR,
-            2 => work_duration.minutes += part_string.parse::<u32>().unwrap() * MINUTES_IN_DAY,
-            _ => return Err("error parsing work duration".to_string())
-        }
+        add_duration_part(&mut work_duration, &part_string, element, value)?;
 
         return Ok(work_duration);
     }
@@ -123,5 +127,45 @@ impl<'de> Deserialize<'de> for WorkDuration {
             let serialized_data = String::deserialize(deserializer)?;
             let work_duration = WorkDuration::from_str(&serialized_data).map_err(serde::de::Error::custom)?;
             Ok(work_duration)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parses_hours_and_minutes() {
+        assert_eq!("2:30".parse::<WorkDuration>().unwrap().minutes, 150);
+    }
+
+    #[test]
+    fn parses_minutes_only() {
+        assert_eq!("45".parse::<WorkDuration>().unwrap().minutes, 45);
+    }
+
+    #[test]
+    fn parses_days_hours_and_minutes() {
+        assert_eq!("1:2:30".parse::<WorkDuration>().unwrap().minutes, MINUTES_IN_DAY + 2 * MINUTES_IN_HOUR + 30);
+    }
+
+    #[test]
+    fn rejects_a_non_numeric_segment() {
+        assert!("abc".parse::<WorkDuration>().is_err());
+    }
+
+    #[test]
+    fn rejects_too_many_segments() {
+        assert!("1:2:3:4".parse::<WorkDuration>().is_err());
+    }
+
+    #[test]
+    fn formats_minutes_as_hours_and_minutes() {
+        assert_eq!(WorkDuration { minutes: 150 }.to_string(), "02:30");
+    }
+
+    #[test]
+    fn formats_a_full_day_with_the_days_segment() {
+        assert_eq!(WorkDuration { minutes: MINUTES_IN_DAY }.to_string(), "01:00:00");
     }
 }

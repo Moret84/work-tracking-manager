@@ -41,7 +41,7 @@ impl WorkDuration {
 
        str.push_str(&format!("{:02}:", to_append));
 
-       return str;
+       str
     }
 }
 
@@ -52,20 +52,20 @@ impl Display for WorkDuration {
         let days = self.minutes / MINUTES_IN_DAY;
         let mut spare_minutes = self.minutes % MINUTES_IN_DAY;
         let hours = spare_minutes / MINUTES_IN_HOUR;
-        spare_minutes = spare_minutes % 60;
+        spare_minutes %= 60;
 
         Self::append_with_sep_if_not_empty(&mut str, days.into());
         str.push_str(&format!("{:02}:", hours));
         str.push_str(&format!("{:02}", spare_minutes));
 
-        let mut result = format!("{}", str);
+        let mut result = str.to_string();
 
         if INCLUDE_TOTAL.load(Ordering::Relaxed) {
             result.push_str(
                 &format!(" total: {:.2}", self.minutes as f64 / MINUTES_IN_DAY as f64)
             )}
 
-        return write!(f, "{}", result);
+        write!(f, "{}", result)
     }
 }
 
@@ -108,7 +108,7 @@ impl FromStr for WorkDuration {
 
         add_duration_part(&mut work_duration, &part_string, element, value)?;
 
-        return Ok(work_duration);
+        Ok(work_duration)
     }
 }
 

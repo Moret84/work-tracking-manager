@@ -1,3 +1,4 @@
+mod json_export;
 mod tracking_record;
 mod work_duration;
 mod tracking_day;
@@ -44,6 +45,10 @@ struct Cli {
     #[arg(long)]
     show_total: bool,
 
+    /// Whether to print a neutral JSON payload meant to be piped into another tool.
+    #[arg(long, conflicts_with_all = ["total", "show_total", "write"])]
+    json: bool,
+
     /// The path of the input file.
     input_path: PathBuf,
 }
@@ -69,6 +74,12 @@ fn run() -> Result<(), String> {
 
     if args.remove_empty {
         filter_remove_empty(&mut tracking_days);
+    }
+
+    if args.json {
+        let export = json_export::Export::new(&tracking_days);
+        println!("{}", json_export::serialize_json(&export)?);
+        return Ok(());
     }
 
     work_duration::set_include_total(args.show_total);

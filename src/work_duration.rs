@@ -13,7 +13,7 @@ pub struct WorkDuration {
 
 const SEMI_COLON: char = ':';
 const MINUTES_IN_HOUR: u32 = 60;
-const MINUTES_IN_DAY: u32 = 450;
+pub const MINUTES_IN_DAY: u32 = 450;
 
 static INCLUDE_TOTAL: AtomicBool = AtomicBool::new(false);
 
